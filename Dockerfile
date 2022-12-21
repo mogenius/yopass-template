@@ -18,6 +18,8 @@ best send all the context except password over another channel."
 RUN mkdir -p /yopass
 WORKDIR /yopass
 COPY . .
+
+RUN go mod download
 RUN go build ./cmd/yopass && go build ./cmd/yopass-server
 
 FROM node:16 as website
