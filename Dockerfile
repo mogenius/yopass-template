@@ -28,4 +28,5 @@ RUN yarn install && yarn build
 FROM gcr.io/distroless/base
 COPY --from=app /yopass/yopass /yopass/yopass-server /
 COPY --from=website /website/build /public
+EXPOSE 1337
 ENTRYPOINT ["/yopass-server"]
