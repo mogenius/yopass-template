@@ -19,7 +19,8 @@ RUN mkdir -p /yopass
 WORKDIR /yopass
 COPY . .
 
-RUN go mod download
+# RUN go mod download
+RUN go get
 RUN go build ./cmd/yopass && go build ./cmd/yopass-server
 
 FROM node:16 as website
