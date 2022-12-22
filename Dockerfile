@@ -1,6 +1,8 @@
 # FROM golang:buster as app
 FROM jhaals/yopass
 
+# FROM golang:buster as app
+
 LABEL "com.mogenius.vendor"="Mogenius"
 LABEL version="1.0"
 LABEL description="TYopass - Share Secrets Securely \
@@ -16,19 +18,17 @@ possible without compromising on security. There's no mapping between the \
 generated UUID and the user that submitted the encrypted message. It's always \
 best send all the context except password over another channel."
 
+# RUN mkdir -p /yopass
+# WORKDIR /yopass
+# COPY . .
+# RUN go build ./cmd/yopass && go build ./cmd/yopass-server
 
-ENV MEMCACHED_USER=nobody \
-    MEMCACHED_VERSION=1.5.6
+# FROM node:16 as website
+# COPY website /website
+# WORKDIR /website
+# RUN yarn install && yarn build
 
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      memcached=${MEMCACHED_VERSION}* \
- && sed 's/^-d/# -d/' -i /etc/memcached.conf \
- && rm -rf /var/lib/apt/lists/*
-
-COPY entrypoint.sh /sbin/entrypoint.sh
-RUN chmod 755 /sbin/entrypoint.sh
-
-EXPOSE 11211/tcp 11211/udp
-ENTRYPOINT ["/sbin/entrypoint.sh"]
-CMD ["/usr/bin/memcached"]
+# FROM gcr.io/distroless/base
+# COPY --from=app /yopass/yopass /yopass/yopass-server /
+# COPY --from=website /website/build /public
+# ENTRYPOINT ["/yopass-server"]
