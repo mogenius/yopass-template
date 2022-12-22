@@ -1,7 +1,7 @@
 # FROM golang:buster as app
-FROM jhaals/yopass
+# FROM jhaals/yopass
 
-# FROM golang:buster as app
+FROM golang:buster as app
 
 LABEL "com.mogenius.vendor"="Mogenius"
 LABEL version="1.0"
@@ -18,17 +18,19 @@ possible without compromising on security. There's no mapping between the \
 generated UUID and the user that submitted the encrypted message. It's always \
 best send all the context except password over another channel."
 
-# RUN mkdir -p /yopass
-# WORKDIR /yopass
-# COPY . .
-# RUN go build ./cmd/yopass && go build ./cmd/yopass-server
+RUN mkdir -p /yopass
+WORKDIR /yopass
+COPY . .
+RUN go build ./cmd/yopass && go build ./cmd/yopass-server
 
-# FROM node:16 as website
-# COPY website /website
-# WORKDIR /website
-# RUN yarn install && yarn build
+FROM node:16 as website
+COPY website /website
+WORKDIR /website
+RUN yarn install && yarn build
 
-# FROM gcr.io/distroless/base
-# COPY --from=app /yopass/yopass /yopass/yopass-server /
-# COPY --from=website /website/build /public
+FROM gcr.io/distroless/base
+COPY --from=app /yopass/yopass /yopass/yopass-server /
+COPY --from=website /website/build /public
+ENV memcached="--memcached=10.0.2.118:11211"
+ENTRYPOINT ["/yopass-server", "$memcached"]
 # ENTRYPOINT ["/yopass-server"]
