@@ -1,6 +1,5 @@
 # FROM golang:buster as app
 # FROM jhaals/yopass
-
 FROM golang:buster as app
 
 LABEL "com.mogenius.vendor"="Mogenius"
@@ -21,16 +20,33 @@ best send all the context except password over another channel."
 RUN mkdir -p /yopass
 WORKDIR /yopass
 COPY . .
-RUN go build ./cmd/yopass && go build ./cmd/yopass-server
+RUN go build ./cmd/yopass
+# && go build ./cmd/yopass-server
+ENV CGO_LDFLAGS+="-Wl,-static -lpcap -Wl,-Bdynamic"
+RUN go build ./cmd/yopass-server
 
 FROM node:16 as website
 COPY website /website
 WORKDIR /website
 RUN yarn install && yarn build
 
-FROM gcr.io/distroless/base
+# FROM gcr.io/distroless/base
+FROM debian
+# RUN apk add --no-cache memcached bash
+RUN apt-get update && apt-get -y install memcached iputils-ping procps
 COPY --from=app /yopass/yopass /yopass/yopass-server /
 COPY --from=website /website/build /public
+# ENV memcached="yopass-mamcach-r992j9:11211"
+# ARG memcached=$MEMCACHED
 ENV memcached="--memcached=10.0.2.118:11211"
-ENTRYPOINT ["/yopass-server", "$memcached"]
+# ENV memcachedhost=${memcached}
+# ENV MEMCACHEDHOST=${MEMCACHED}
 # ENTRYPOINT ["/yopass-server"]
+COPY entrypoint.sh /entrypoint.sh
+## ENTRYPOINT ["/yopass-server", "$memcached"]
+# ENTRYPOINT ["/yopass-server", "--memcached=$MEMCACHEDHOST"]
+# ENTRYPOINT ["/yopass-server", "--memcached=10.0.2.118:11211"]
+
+EXPOSE 1338/tcp
+
+ENTRYPOINT /entrypoint.sh
