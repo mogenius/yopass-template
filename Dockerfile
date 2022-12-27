@@ -1,10 +1,8 @@
-# FROM golang:buster as app
-# FROM jhaals/yopass
 FROM golang:buster as app
 
 LABEL "com.mogenius.vendor"="Mogenius"
 LABEL version="1.0"
-LABEL description="TYopass - Share Secrets Securely \
+LABEL description="Yopass - Share Secrets Securely \
 Yopass is a project for sharing secrets in a quick and secure manner*. \
 The sole purpose of Yopass is to minimize the amount of passwords floating \
 around in ticket management systems, Slack messages and emails. The message \
@@ -21,7 +19,6 @@ RUN mkdir -p /yopass
 WORKDIR /yopass
 COPY . .
 RUN go build ./cmd/yopass
-# && go build ./cmd/yopass-server
 ENV CGO_LDFLAGS+="-Wl,-static -lpcap -Wl,-Bdynamic"
 RUN go build ./cmd/yopass-server
 
@@ -30,23 +27,12 @@ COPY website /website
 WORKDIR /website
 RUN yarn install && yarn build
 
-# FROM gcr.io/distroless/base
 FROM debian
-# RUN apk add --no-cache memcached bash
 RUN apt-get update && apt-get -y install memcached iputils-ping procps
 COPY --from=app /yopass/yopass /yopass/yopass-server /
 COPY --from=website /website/build /public
-# ENV memcached="yopass-mamcach-r992j9:11211"
-# ARG memcached=$MEMCACHED
-ENV memcached="--memcached=10.0.2.118:11211"
-# ENV memcachedhost=${memcached}
-# ENV MEMCACHEDHOST=${MEMCACHED}
-# ENTRYPOINT ["/yopass-server"]
 COPY entrypoint.sh /entrypoint.sh
-## ENTRYPOINT ["/yopass-server", "$memcached"]
-# ENTRYPOINT ["/yopass-server", "--memcached=$MEMCACHEDHOST"]
-# ENTRYPOINT ["/yopass-server", "--memcached=10.0.2.118:11211"]
 
-EXPOSE 1338/tcp
+EXPOSE 1337/tcp
 
 ENTRYPOINT /entrypoint.sh
